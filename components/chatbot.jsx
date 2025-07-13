@@ -66,7 +66,7 @@ export default function ChatBot() {
 
       {open && (
         <div
-          className="fixed bottom-20 right-5 max-w-sm w-full min-h-[400px] max-h-[600px] rounded-xl shadow-2xl border z-50 flex flex-col resize overflow-hidden
+          className="fixed bottom-20 right-5 w-[95%] sm:w-[380px] min-h-[400px] max-h-[600px] rounded-xl shadow-2xl border z-50 flex flex-col resize overflow-hidden
           bg-white text-black border-gray-200 dark:bg-zinc-900 dark:text-white dark:border-zinc-700"
           style={{ resize: "both", overflow: "hidden" }}
         >
@@ -79,7 +79,7 @@ export default function ChatBot() {
             </button>
           </div>
 
-          {/* Messages */}
+          {/* Chat Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
             {messages.map((msg, i) => (
               <div
@@ -101,7 +101,7 @@ export default function ChatBot() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Suggestions */}
+          {/* Suggested Questions */}
           <div className="flex flex-wrap gap-2 p-3 border-t border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900">
             {suggestedQuestions.map((q, i) => (
               <button
@@ -114,7 +114,7 @@ export default function ChatBot() {
             ))}
           </div>
 
-          {/* Input */}
+          {/* Input Box */}
           <form
             onSubmit={(e) => {
               e.preventDefault();
