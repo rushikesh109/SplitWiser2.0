@@ -56,37 +56,38 @@ export default function ChatBot() {
 
   return (
     <>
-      {/* Chat Toggle Button */}
+      {/* Toggle Button */}
       <button
         onClick={() => setOpen(!open)}
-        className="fixed bottom-5 right-5 text-white w-12 h-12 rounded-full shadow-xl text-2xl z-50 gradient"
+        className="fixed bottom-5 right-5 text-white w-12 h-12 rounded-full shadow-xl text-2xl z-50 bg-gradient-to-r from-green-600 to-teal-500"
       >
         💬
       </button>
 
-      {/* Chat Box */}
       {open && (
         <div
-          className="fixed bottom-20 right-5 max-w-sm w-full min-h-[400px] max-h-[600px] bg-white rounded-xl shadow-2xl border border-gray-200 z-50 flex flex-col resize overflow-hidden"
+          className="fixed bottom-20 right-5 max-w-sm w-full min-h-[400px] max-h-[600px] rounded-xl shadow-2xl border z-50 flex flex-col resize overflow-hidden
+          bg-white text-black border-gray-200 dark:bg-zinc-900 dark:text-white dark:border-zinc-700"
           style={{ resize: "both", overflow: "hidden" }}
         >
           {/* Header */}
-          <div className="flex justify-between items-center text-white p-4 rounded-t-xl gradient">
+          <div className="flex justify-between items-center p-4 rounded-t-xl 
+            bg-gradient-to-r from-green-600 to-teal-500 text-white dark:from-zinc-900 dark:to-zinc-800">
             <h2 className="font-semibold">🤖 SplitWiser AI</h2>
             <button onClick={() => setOpen(false)} className="text-lg">
               ❌
             </button>
           </div>
 
-          {/* Chat messages */}
+          {/* Messages */}
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
             {messages.map((msg, i) => (
               <div
                 key={i}
                 className={`max-w-xs p-3 rounded-md text-sm whitespace-pre-wrap ${
                   msg.type === "bot"
-                    ? "bg-gray-100 text-gray-800 self-start"
-                    : "bg-blue-100 text-blue-800 self-end"
+                    ? "bg-gray-100 text-gray-800 self-start dark:bg-zinc-800 dark:text-white"
+                    : "bg-blue-100 text-blue-800 self-end dark:bg-blue-900 dark:text-blue-200"
                 }`}
               >
                 <ReactMarkdown>{msg.text}</ReactMarkdown>
@@ -100,13 +101,13 @@ export default function ChatBot() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Suggested Questions */}
-          <div className="flex flex-wrap gap-2 p-3 border-t border-gray-200 bg-white">
+          {/* Suggestions */}
+          <div className="flex flex-wrap gap-2 p-3 border-t border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900">
             {suggestedQuestions.map((q, i) => (
               <button
                 key={i}
                 onClick={() => sendMessage(q)}
-                className="text-white gradient hover:opacity-90 px-3 py-1 text-sm rounded-full"
+                className="text-white bg-gradient-to-r from-green-600 to-teal-500 hover:opacity-90 px-3 py-1 text-sm rounded-full"
               >
                 {q}
               </button>
@@ -119,18 +120,19 @@ export default function ChatBot() {
               e.preventDefault();
               sendMessage(question);
             }}
-            className="flex border-t border-gray-200 p-3"
+            className="flex border-t p-3 border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-900"
           >
             <input
               type="text"
               placeholder="Ask something..."
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+              className="flex-1 px-3 py-2 border rounded-md text-sm
+              border-gray-300 text-black bg-white dark:bg-zinc-800 dark:border-zinc-700 dark:text-white"
             />
             <button
               type="submit"
-              className="ml-2 text-white px-4 py-2 rounded-md text-sm gradient"
+              className="ml-2 px-4 py-2 text-white rounded-md text-sm bg-gradient-to-r from-green-600 to-teal-500"
             >
               Send
             </button>
