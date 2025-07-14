@@ -2,12 +2,10 @@
 
 import { useStoreUser } from "@/hooks/use-store-user";
 import { SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
-import { SignedIn, SignedOut } from "@clerk/nextjs";
 import { Authenticated, Unauthenticated } from "convex/react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React from "react";
 import { BarLoader } from "react-spinners";
 import { Button } from "./ui/button";
 import { LayoutDashboard } from "lucide-react";
@@ -16,20 +14,23 @@ import ThemeToggle from "./ThemeToggle";
 const Header = () => {
   const { isLoading } = useStoreUser();
   const path = usePathname();
+
   return (
     <header className="fixed top-0 w-full border-b z-50 backdrop-blur supports-[backdrop-filter]:bg-white/60 bg-white/95 dark:bg-zinc-900/80 dark:supports-[backdrop-filter]:bg-zinc-900/60 dark:border-zinc-700">
-      <nav className="container mx-auto px-9 h-16 flex items-center justify-between">
+      <nav className="container mx-auto px-5 md:px-9 h-16 flex items-center justify-between">
+        {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <Image
             src="/logos/logo.png"
             alt="SplitWiser Logo"
-            width={300}
-            height={90}
-            className="h-14 w-auto object-contain sm:h-16 md:h-20 lg:h-24"
+            width={160}
+            height={48}
+            className="h-45 w-auto object-contain"
             priority
           />
         </Link>
 
+        {/* Nav links */}
         {path === "/" && (
           <div className="hidden md:flex items-center gap-6">
             <Link
@@ -47,12 +48,13 @@ const Header = () => {
           </div>
         )}
 
-        <div className="flex items-center gap-4">
+        {/* Auth Buttons + Theme Toggle */}
+        <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
           <Authenticated>
             <Link href="/dashboard">
               <Button
                 variant="outline"
-                className="hidden md:inline-flex items-center gap-2 hover:text-green-600 hover:border-green-600 transition"
+                className="hidden md:inline-flex items-center gap-2 h-10"
               >
                 <LayoutDashboard className="h-4 w-4" />
                 Dashboard
@@ -67,10 +69,12 @@ const Header = () => {
 
           <Unauthenticated>
             <SignInButton>
-              <Button variant="ghost">Sign In</Button>
+              <Button variant="ghost" className="h-10">
+                Sign In
+              </Button>
             </SignInButton>
             <SignUpButton>
-              <Button className="bg-green-600 hover:bg-green-700 border-none text-white">
+              <Button className="bg-green-600 hover:bg-green-700 border-none text-white h-10">
                 Getting Started
               </Button>
             </SignUpButton>
