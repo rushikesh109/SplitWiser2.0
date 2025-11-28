@@ -7,7 +7,6 @@ export const {GET, POST, PUT} = serve({
     client: inngest,
     functions: [
 
-        // your functions will be passed here 
      paymentReminders,
      spendingInsights,
     ],

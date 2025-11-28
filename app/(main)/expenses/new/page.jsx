@@ -1,4 +1,5 @@
-"use client"
+ "use client"
+
 
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -7,7 +8,9 @@ import React from 'react'
 import { ExpenseForm } from './compnents/expense-form';
 
 
+
 const NewExpensesPage = () => {
+
 
     const router = useRouter();
   return (
@@ -33,6 +36,7 @@ const NewExpensesPage = () => {
               <ExpenseForm
               type="individual" onSuccess={(id) => router.push(`/person/${id}`)} />
 
+
             </TabsContent>
             <TabsContent value="group" className="mt-0">
               <ExpenseForm type="group"
@@ -44,5 +48,6 @@ const NewExpensesPage = () => {
     </div>
   )
 }
+
 
 export default NewExpensesPage

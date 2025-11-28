@@ -4,5 +4,7 @@
     "paths": {
       "@/*": ["./*"]
     }
-  }
+    // REMOVE the "types": [...] line if it exists
+  },
+  "exclude": ["node_modules", ".next"]
 }
