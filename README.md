@@ -53,26 +53,6 @@
 }
 ```
 
-## 🔔 Newly Integrated Features
-
-- **AI-generated Monthly Expense Summary:** The app now includes a server-side AI insights feature that generates short, human-readable summaries of monthly expense data. This is implemented as a Convex action that calls Google Generative AI (Gemini) using a server-only `GEMINI_API_KEY` and is exposed through the existing expense-summary API route so it fits into the normal app flow (collect data → run Convex query → call Convex action → return combined data + AI summary).
-
-- **Background Jobs (Inngest):** Background automation for payment reminders and spending insights is integrated. Inngest functions run scheduled or event-driven jobs (send reminders via Resend, generate insights) and are intended to run server-side with appropriate env keys (for example, `RESEND_API_KEY`). These jobs are wired into the app's backend flow and support improved user engagement.
-
-## 🐳 Docker (Run locally via the published image)
-
-Pull the published image and run it with your production env file. Make sure you create an `.env.production` file containing the required environment variables (Convex URL, Clerk settings, API keys such as `GEMINI_API_KEY`, `RESEND_API_KEY`, etc.).
-
-```bash
-docker pull rushim09/splitwiser:1.0
-docker run -p 3000:3000 --env-file .env.production rushim09/splitwiser:1.0
-```
-
-Notes:
-- `NEXT_PUBLIC_CONVEX_URL` should be set for client-side Convex usage; keep other keys server-only.
-- If you prefer building locally, follow the local setup in the `Setup Instructions` section above.
-
-
 ---
 
 ## 📁 Project Structure
@@ -337,3 +317,4 @@ For support, please create an issue in the repository or email: mangrulerushikes
 ---
 
 **Splitwiser** — Making expense splitting simple, smart, and stress-free! 💚
+
