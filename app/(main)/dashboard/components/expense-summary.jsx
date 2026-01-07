@@ -12,22 +12,13 @@ import {
 } from "recharts";
 
 export function ExpenseSummary({ monthlySpending, totalSpent }) {
-  // Format monthly data for chart
+  // Month labels
   const monthNames = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
   ];
 
+  // Prepare chart data (net share per month)
   const chartData =
     monthlySpending?.map((item) => {
       const date = new Date(item.month);
@@ -37,31 +28,44 @@ export function ExpenseSummary({ monthlySpending, totalSpent }) {
       };
     }) || [];
 
-  // Get current year
   const currentYear = new Date().getFullYear();
   const currentMonth = new Date().getMonth();
 
+  const monthAmount =
+    monthlySpending?.[currentMonth]?.total ?? 0;
+
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Expense Summary</CardTitle>
+      <CardHeader className="space-y-1">
+        <CardTitle>Your Expense Share</CardTitle>
+        <p className="text-xs text-muted-foreground">
+          Based on your share after splits and settlements
+        </p>
       </CardHeader>
+
       <CardContent>
+        {/* Stats */}
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-muted rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Total this month</p>
+            <p className="text-sm text-muted-foreground">
+              Your net share this month
+            </p>
             <h3 className="text-2xl font-bold mt-1">
-              ${monthlySpending?.[currentMonth]?.total.toFixed(2) || "0.00"}
+              ₹{monthAmount.toFixed(2)}
             </h3>
           </div>
+
           <div className="bg-muted rounded-lg p-4">
-            <p className="text-sm text-muted-foreground">Total this year</p>
+            <p className="text-sm text-muted-foreground">
+              Your net share this year
+            </p>
             <h3 className="text-2xl font-bold mt-1">
-              ${totalSpent?.toFixed(2) || "0.00"}
+              ₹{(totalSpent ?? 0).toFixed(2)}
             </h3>
           </div>
         </div>
 
+        {/* Chart */}
         <div className="h-64 mt-6">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
@@ -69,16 +73,21 @@ export function ExpenseSummary({ monthlySpending, totalSpent }) {
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip
-                formatter={(value) => [`$${value.toFixed(2)}`, "Amount"]}
-                labelFormatter={() => "Spending"}
+                formatter={(value) => [`₹${value.toFixed(2)}`, "Amount"]}
+                labelFormatter={() => "Your share"}
               />
-              <Bar dataKey="amount" fill="#36d7b7" radius={[4, 4, 0, 0]} />
+              <Bar
+                dataKey="amount"
+                fill="#36d7b7"
+                radius={[4, 4, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
+        {/* Footer */}
         <p className="text-xs text-muted-foreground text-center mt-2">
-          Monthly spending for {currentYear}
+          Your monthly expense share for {currentYear}
         </p>
       </CardContent>
     </Card>
