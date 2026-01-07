@@ -33,6 +33,11 @@
 - **Mobile Responsive:** Optimized for all screen sizes.
 - **Dark Mode:** Seamless light/dark theme toggle.
 
+- **AI-generated Monthly Expense Summary:** A server-side AI insights feature generates short, human-readable summaries of monthly expense data. It runs as a Convex action that uses Google Generative AI (Gemini) with a server-only `GEMINI_API_KEY` and is surfaced via the existing expense-summary API flow.
+
+- **Docker (published image):** You can run the app from a published Docker image. Pull `rushim09/splitwiser:1.0` and run it with a production env file (example below). Keep server API keys (like `GEMINI_API_KEY` and `RESEND_API_KEY`) out of client bundles.
+
+
 ---
 
 ## 🏗️ Architecture & Tech Stack
