@@ -12,7 +12,7 @@
 
 **Splitwiser** is a modern web application that helps friends, roommates, and groups split expenses effortlessly. Whether you're sharing rent, planning a trip, or managing group expenses, Splitwiser provides a seamless experience for tracking shared expenses and settling balances.
 
-- **Live Demo:** [https://splitwiser-app.vercel.app](https://split-wiser2-0.vercel.app)
+- **Live Demo:** [https://splitwiser-app.vercel.app](https://split-wiser2-0.vercel.app/)
 
 ---
 
