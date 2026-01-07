@@ -13,7 +13,7 @@ const MainLayout = ({ children }) => {
       enableSystem={true}
       disableTransitionOnChange={false}
       >
-    <Authenticated>
+    <Authenticated>gi 
       <main className="min-h-screen pt-24 pb-28 px-4 sm:px-6 md:px-8 bg-white text-black dark:bg-zinc-900 dark:text-white transition-colors duration-300">
         <div className="max-w-6xl mx-auto w-full">
           {children}
