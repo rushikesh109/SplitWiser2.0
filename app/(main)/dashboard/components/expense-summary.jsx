@@ -73,7 +73,7 @@ export function ExpenseSummary({ monthlySpending, totalSpent }) {
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip
-                formatter={(value) => [`₹${value.toFixed(2)}`, "Amount"]}
+                formatter={(value) => [`₹{value.toFixed(2)}`, "Amount"]}
                 labelFormatter={() => "Your share"}
               />
               <Bar

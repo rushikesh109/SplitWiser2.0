@@ -90,10 +90,10 @@ const DashboardPage = () => {
           title="Total Balance"
           amount={
             balances?.totalBalance > 0
-              ? `+$${balances.totalBalance.toFixed(2)}`
+              ? `+₹${balances.totalBalance.toFixed(2)}`
               : balances?.totalBalance < 0
-              ? `-$${Math.abs(balances.totalBalance).toFixed(2)}`
-              : "$0.00"
+              ? `-₹${Math.abs(balances.totalBalance).toFixed(2)}`
+              : "₹0.00"
           }
           color={
             balances?.totalBalance > 0
@@ -113,7 +113,7 @@ const DashboardPage = () => {
 
         <StatCard
           title="You are owed"
-          amount={`$${balances?.youAreOwed.toFixed(2)}`}
+          amount={`₹${balances?.youAreOwed.toFixed(2)}`}
           color="text-green-600"
           note={`From ${balances?.oweDetails?.youAreOwedBy?.length || 0} people`}
         />
@@ -122,8 +122,8 @@ const DashboardPage = () => {
           title="You owe"
           amount={
             (balances?.oweDetails?.youOwe?.length ?? 0) > 0
-              ? `$${balances.youOwe.toFixed(2)}`
-              : "$0.00"
+              ? `₹${balances.youOwe.toFixed(2)}`
+              : "₹0.00"
           }
           color={
             (balances?.oweDetails?.youOwe?.length ?? 0) > 0
