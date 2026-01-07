@@ -22,7 +22,7 @@ export function GroupList({ groups }) {
 
         return (
           <Link
-            href={`/groups/${group.id}`}
+            href={`/groups/₹{group.id}`}
             key={group.id}
             className="flex items-center justify-between hover:bg-muted p-2 rounded-md transition-colors"
           >
@@ -40,11 +40,11 @@ export function GroupList({ groups }) {
 
             {hasBalance && (
               <span
-                className={`text-sm font-medium ${
+                className={`text-sm font-medium ₹{
                   balance > 0 ? "text-green-600" : "text-red-600"
                 }`}
               >
-                {balance > 0 ? "+" : ""}${balance.toFixed(2)}
+                {balance > 0 ? "+" : ""}₹{balance.toFixed(2)}
               </span>
             )}
           </Link>

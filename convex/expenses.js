@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query , action } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 
@@ -170,5 +170,134 @@ export const deleteExpense = mutation({
 
     await ctx.db.delete(args.expenseId);
     return { success: true };
+  },
+});
+
+export const getMonthlyExpenseSummaryQuery = query({
+  args: {
+    month: v.number(),
+    year: v.number(),
+  },
+  handler: async (ctx, { month, year }) => {
+    const user = await ctx.runQuery(internal.users.getCurrentUser);
+    if (!user) {
+      throw new Error("Not authenticated");
+    }
+
+    const start = new Date(year, month - 1, 1).getTime();
+    const end = new Date(year, month, 1).getTime();
+
+    const expenses = await ctx.db
+      .query("expenses")
+      .withIndex("by_date", q =>
+        q.gte("date", start).lt("date", end)
+      )
+      .filter(q => q.eq(q.field("createdBy"), user._id))
+      .collect();
+
+    const totalSpent = expenses.reduce(
+      (sum, e) => sum + (e.amount || 0),
+      0
+    );
+
+    const expenseCount = expenses.length;
+
+    const categoryMap = {};
+    for (const e of expenses) {
+      const category = e.category || "Other";
+      categoryMap[category] =
+        (categoryMap[category] || 0) + (e.amount || 0);
+    }
+
+    const topCategories = Object.entries(categoryMap)
+      .map(([name, amount]) => ({ name, amount }))
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 2);
+
+    let userPaid = 0;
+    let othersPaid = 0;
+
+    for (const e of expenses) {
+      if (String(e.paidByUserId) === String(user._id)) {
+        userPaid += e.amount || 0;
+      } else {
+        othersPaid += e.amount || 0;
+      }
+    }
+
+    const paidMoreThanOthers = userPaid > othersPaid;
+
+    return {
+      period: `${new Date(year, month - 1).toLocaleString("en-US", {
+        month: "long",
+      })} ${year}`,
+      currency: "INR",
+      totalSpent,
+      expenseCount,
+      topCategories,
+      paidMoreThanOthers,
+    };
+  },
+});
+
+
+export const getMonthlyExpenseSummaryAction = action({
+  args: {
+    month: v.number(),
+    year: v.number(),
+  },
+  handler: async (ctx, { month, year }) => {
+    // 1️⃣ Call QUERY (DB work)
+    const summaryData = await ctx.runQuery(
+      "expenses:getMonthlyExpenseSummaryQuery",
+      { month, year }
+    );
+    // 2️⃣ Gemini AI
+    let aiSummary = "AI insights are temporarily unavailable. Showing data summary instead.";
+
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (apiKey) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              contents: [
+                {
+                  role: "user",
+                  parts: [
+                    {
+                      text: `You are a financial insights assistant.
+Use only the data below.
+Max 5 sentences.
+
+${JSON.stringify(summaryData, null, 2)}`,
+                    },
+                  ],
+                },
+              ],
+            }),
+          }
+        );
+
+        if (response.ok) {
+          const json = await response.json();
+          aiSummary =
+            json?.candidates?.[0]?.content?.parts?.[0]?.text ||
+            aiSummary;
+        }
+        
+      } catch (err) {
+        console.error("Gemini error:", err);
+      }
+    }
+
+    return {
+      data: summaryData,
+      aiSummary,
+    };
   },
 });

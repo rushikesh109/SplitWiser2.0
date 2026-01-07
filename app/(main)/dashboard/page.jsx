@@ -1,22 +1,33 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { api } from "@/convex/_generated/api";
 import { useConvexQuery } from "@/hooks/use-convex-query";
 import { ChevronRight, PlusCircle } from "lucide-react";
 import Link from "next/link";
 import React, { useMemo } from "react";
 import { BarLoader } from "react-spinners";
+
 import { BalanceSummary } from "./components/balance-summary";
 import { ExpenseSummary } from "./components/expense-summary";
 import { GroupList } from "./components/group-list";
 
+// ✅ NEW IMPORT (AI Summary Card)
+import ExpenseSummaryCard from "./components/ExpenseSummaryCard";
 
 const StatCard = ({ title, amount, color = "text-foreground", note }) => (
   <Card>
     <CardHeader className="pb-2">
-      <CardTitle className="text-sm font-medium text-muted-foreground">{title}</CardTitle>
+      <CardTitle className="text-sm font-medium text-muted-foreground">
+        {title}
+      </CardTitle>
     </CardHeader>
     <CardContent>
       <div className={`text-2xl font-bold ${color}`}>{amount}</div>
@@ -26,14 +37,30 @@ const StatCard = ({ title, amount, color = "text-foreground", note }) => (
 );
 
 const DashboardPage = () => {
-  const { data: balances, isLoading: balancesLoading } = useConvexQuery(api.dashboard.getUserBalances);
-  const { data: groups, isLoading: groupLoading } = useConvexQuery(api.dashboard.getUserGroups);
-  const { data: totalSpent, isLoading: totalSpentLoading } = useConvexQuery(api.dashboard.getTotalSpent);
-  const { data: monthlySpending, isLoading: monthlySpendingLoading } = useConvexQuery(api.dashboard.getMonthlySpending);
+  const { data: balances, isLoading: balancesLoading } =
+    useConvexQuery(api.dashboard.getUserBalances);
+
+  const { data: groups, isLoading: groupLoading } =
+    useConvexQuery(api.dashboard.getUserGroups);
+
+  const { data: totalSpent, isLoading: totalSpentLoading } =
+    useConvexQuery(api.dashboard.getTotalSpent);
+
+  const { data: monthlySpending, isLoading: monthlySpendingLoading } =
+    useConvexQuery(api.dashboard.getMonthlySpending);
 
   const isLoading = useMemo(
-    () => balancesLoading || groupLoading || totalSpentLoading || monthlySpendingLoading,
-    [balancesLoading, groupLoading, totalSpentLoading, monthlySpendingLoading]
+    () =>
+      balancesLoading ||
+      groupLoading ||
+      totalSpentLoading ||
+      monthlySpendingLoading,
+    [
+      balancesLoading,
+      groupLoading,
+      totalSpentLoading,
+      monthlySpendingLoading,
+    ]
   );
 
   if (isLoading) {
@@ -46,6 +73,7 @@ const DashboardPage = () => {
 
   return (
     <div>
+      {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-5xl gradient-title">Dashboard</h1>
         <Button asChild>
@@ -56,22 +84,23 @@ const DashboardPage = () => {
         </Button>
       </div>
 
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <StatCard
           title="Total Balance"
           amount={
             balances?.totalBalance > 0
-              ? `+$${balances.totalBalance.toFixed(2)}`
+              ? `+₹${balances.totalBalance.toFixed(2)}`
               : balances?.totalBalance < 0
-              ? `-$${Math.abs(balances.totalBalance).toFixed(2)}`
-              : "$0.00"
+              ? `-₹${Math.abs(balances.totalBalance).toFixed(2)}`
+              : "₹0.00"
           }
           color={
             balances?.totalBalance > 0
               ? "text-green-600"
               : balances?.totalBalance < 0
               ? "text-red-600"
-              : "text-foreground" 
+              : "text-foreground"
           }
           note={
             balances?.totalBalance > 0
@@ -84,7 +113,7 @@ const DashboardPage = () => {
 
         <StatCard
           title="You are owed"
-          amount={`$${balances?.youAreOwed.toFixed(2)}`}
+          amount={`₹${balances?.youAreOwed.toFixed(2)}`}
           color="text-green-600"
           note={`From ${balances?.oweDetails?.youAreOwedBy?.length || 0} people`}
         />
@@ -93,10 +122,14 @@ const DashboardPage = () => {
           title="You owe"
           amount={
             (balances?.oweDetails?.youOwe?.length ?? 0) > 0
-              ? `$${balances.youOwe.toFixed(2)}`
-              : "$0.00"
+              ? `₹${balances.youOwe.toFixed(2)}`
+              : "₹0.00"
           }
-          color={(balances?.oweDetails?.youOwe?.length ?? 0) > 0 ? "text-red-600" : "text-foreground"} 
+          color={
+            (balances?.oweDetails?.youOwe?.length ?? 0) > 0
+              ? "text-red-600"
+              : "text-foreground"
+          }
           note={
             (balances?.oweDetails?.youOwe?.length ?? 0) > 0
               ? `To ${balances.oweDetails.youOwe.length} people`
@@ -105,11 +138,21 @@ const DashboardPage = () => {
         />
       </div>
 
+      {/* Main content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* LEFT SIDE */}
         <div className="lg:col-span-2 space-y-6">
-          <ExpenseSummary monthlySpending={monthlySpending} totalSpent={totalSpent} />
+          {/* ✅ AI Expense Summary */}
+          <ExpenseSummaryCard />
+
+          {/* Existing charts summary */}
+          <ExpenseSummary
+            monthlySpending={monthlySpending}
+            totalSpent={totalSpent}
+          />
         </div>
 
+        {/* RIGHT SIDE */}
         <div className="space-y-6">
           <Card>
             <CardHeader className="pb-3 flex items-center justify-between">
@@ -140,7 +183,9 @@ const DashboardPage = () => {
               <GroupList groups={groups} />
               <CardFooter>
                 <Button variant="outline" asChild className="w-full">
-                  <Link href="/contacts?createGroup=true">Create new group</Link>
+                  <Link href="/contacts?createGroup=true">
+                    Create new group
+                  </Link>
                 </Button>
               </CardFooter>
             </CardContent>
