@@ -8,7 +8,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BarLoader } from "react-spinners";
 import { Button } from "./ui/button";
-import { LayoutDashboard } from "lucide-react";
+import { Github, LayoutDashboard } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 
 const Header = () => {
@@ -50,11 +50,28 @@ const Header = () => {
 
         {/* Auth Buttons + Theme Toggle */}
         <div className="flex items-center gap-2 sm:gap-3 md:gap-4">
+        <div className="flex items-center gap-2">
+        
+        <Button
+  className="
+    bg-green-600 hover:bg-green-700 border-none text-white cursor-pointer
+    h-8 px-3 text-sm
+    sm:h-10 sm:px-4 sm:text-base
+  "
+  onClick={() =>
+    window.open("https://github.com/rushikesh109/SplitWiser", "_blank")
+  }
+>
+  <Github size={18} strokeWidth={2.25} />
+  GitHub
+</Button>
+
+        </div>
           <Authenticated>
             <Link href="/dashboard">
               <Button
                 variant="outline"
-                className="hidden md:inline-flex items-center gap-2 h-10"
+                className="hidden md:inline-flex items-center gap-2 h-10 cursor-pointer"
               >
                 <LayoutDashboard className="h-4 w-4" />
                 Dashboard
@@ -69,12 +86,12 @@ const Header = () => {
 
           <Unauthenticated>
             <SignInButton>
-              <Button variant="ghost" className="h-10">
+              <Button variant="ghost" className="h-10 cursor-pointer">
                 Sign In
               </Button>
             </SignInButton>
             <SignUpButton>
-              <Button className="bg-green-600 hover:bg-green-700 border-none text-white h-10">
+              <Button className="bg-green-600 hover:bg-green-700 border-none text-white h-10 cursor-pointer">
                 Getting Started
               </Button>
             </SignUpButton>
