@@ -64,7 +64,7 @@ const Header = () => {
   "
   onClick={() =>
     window.open(
-      "https://github.com/rushikesh109/SplitWiser",
+      "https://github.com/rushikesh109/SplitWiser2.0",
       "_blank",
       "noopener,noreferrer"
     )
