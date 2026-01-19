@@ -23,17 +23,20 @@ export function BalanceSummary({ balances }) {
             <ArrowUpCircle className="h-4 w-4 text-green-500 mr-2" />
             Owed to you
           </h3>
+
           <div className="space-y-3">
             {oweDetails.youAreOwedBy.map((item) => (
               <Link
-                href={`/person/₹{item.userId}`}
                 key={item.userId}
+                href={`/person/${item.userId}`}
                 className="flex items-center justify-between hover:bg-muted p-2 rounded-md transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={item.imageUrl} />
-                    <AvatarFallback>{item.name.charAt(0)}</AvatarFallback>
+                    <AvatarFallback>
+                      {item.name.charAt(0)}
+                    </AvatarFallback>
                   </Avatar>
                   <span className="text-sm">{item.name}</span>
                 </div>
@@ -52,17 +55,20 @@ export function BalanceSummary({ balances }) {
             <ArrowDownCircle className="h-4 w-4 text-red-500 mr-2" />
             You owe
           </h3>
+
           <div className="space-y-3">
             {oweDetails.youOwe.map((item) => (
               <Link
-                href={`/person/₹{item.userId}`}
                 key={item.userId}
+                href={`/person/${item.userId}`}
                 className="flex items-center justify-between hover:bg-muted p-2 rounded-md transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={item.imageUrl} />
-                    <AvatarFallback>{item.name.charAt(0)}</AvatarFallback>
+                    <AvatarFallback>
+                      {item.name.charAt(0)}
+                    </AvatarFallback>
                   </Avatar>
                   <span className="text-sm">{item.name}</span>
                 </div>

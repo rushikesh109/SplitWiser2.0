@@ -1,16 +1,17 @@
-import { mutation, query , action } from "./_generated/server";
+import { mutation, query, action } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 
-// Create a new expense
+/* ---------------- CREATE EXPENSE ---------------- */
+
 export const createExpense = mutation({
   args: {
     description: v.string(),
     amount: v.number(),
     category: v.optional(v.string()),
-    date: v.number(), // timestamp
+    date: v.number(),
     paidByUserId: v.id("users"),
-    splitType: v.string(), // "equal", "percentage", "exact"
+    splitType: v.string(),
     splits: v.array(
       v.object({
         userId: v.id("users"),
@@ -20,89 +21,101 @@ export const createExpense = mutation({
     ),
     groupId: v.optional(v.id("groups")),
   },
-  handler: async (ctx, args) => {
-    // Use centralized getCurrentUser function
-    const user = await ctx.runQuery(internal.users.getCurrentUser);
 
-    // If there's a group, verify the user is a member
+  handler: async (ctx, args) => {
+    const currentUser = await ctx.runQuery(internal.users.getCurrentUser);
+
+    let group = null;
+
+    // 1️⃣ Validate group membership
     if (args.groupId) {
-      const group = await ctx.db.get(args.groupId);
-      if (!group) {
-        throw new Error("Group not found");
-      }
+      group = await ctx.db.get(args.groupId);
+      if (!group) throw new Error("Group not found");
 
       const isMember = group.members.some(
-        (member) => member.userId === user._id
+        (m) => m.userId === currentUser._id
       );
-      if (!isMember) {
-        throw new Error("You are not a member of this group");
+      if (!isMember) throw new Error("You are not a group member");
+    }
+
+    // 2️⃣ Validate payer
+    if (args.groupId) {
+      const payerIsMember = group.members.some(
+        (m) => m.userId === args.paidByUserId
+      );
+      if (!payerIsMember) {
+        throw new Error("Paid-by user is not part of the group");
+      }
+    } else if (args.paidByUserId !== currentUser._id) {
+      throw new Error("You can only pay personal expenses yourself");
+    }
+
+    // 3️⃣ Validate split users
+    for (const split of args.splits) {
+      if (args.groupId) {
+        const validUser = group.members.some(
+          (m) => m.userId === split.userId
+        );
+        if (!validUser) {
+          throw new Error("Split user not in group");
+        }
       }
     }
 
-    // Verify that splits add up to the total amount (with small tolerance for floating point issues)
-    const totalSplitAmount = args.splits.reduce(
-      (sum, split) => sum + split.amount,
+    // 4️⃣ Validate split total
+    const totalSplit = args.splits.reduce(
+      (sum, s) => sum + s.amount,
       0
     );
-    const tolerance = 0.01; // Allow for small rounding errors
-    if (Math.abs(totalSplitAmount - args.amount) > tolerance) {
-      throw new Error("Split amounts must add up to the total expense amount");
+
+    if (Math.abs(totalSplit - args.amount) > 0.01) {
+      throw new Error("Split amounts must equal total amount");
     }
 
-    // Create the expense
-    const expenseId = await ctx.db.insert("expenses", {
+    // 5️⃣ Create expense
+    return await ctx.db.insert("expenses", {
       description: args.description,
       amount: args.amount,
-      category: args.category || "Other",
+      category: args.category ?? "Other",
       date: args.date,
       paidByUserId: args.paidByUserId,
       splitType: args.splitType,
       splits: args.splits,
-      groupId: args.groupId,
-      createdBy: user._id,
+      groupId: args.groupId ?? null,
+      createdBy: currentUser._id,
     });
-
-    return expenseId;
   },
 });
 
+/* ---------------- USER TO USER EXPENSES ---------------- */
+
 export const getExpensesBetweenUsers = query({
   args: { userId: v.id("users") },
+
   handler: async (ctx, { userId }) => {
     const me = await ctx.runQuery(internal.users.getCurrentUser);
-    if (me._id === userId) throw new Error("Cannot query yourself");
+    if (me._id === userId) throw new Error("Invalid user");
 
-    const mypaid = await ctx.db
+    const expenses = await ctx.db
       .query("expenses")
-      .withIndex("by_user_and_group", (q) =>
-        q.eq("paidByUserId", me._id).eq("groupId", undefined)
-      )
+      .withIndex("by_group", (q) => q.eq("groupId", null))
       .collect();
 
-    const theirPaid = await ctx.db
-      .query("expenses")
-      .withIndex("by_user_and_group", (q) =>
-        q.eq("paidByUserId", userId).eq("groupId", undefined)
-      )
-      .collect();
-
-    const candidateExpenses = [...mypaid, ...theirPaid];
-
-    const expenses = candidateExpenses.filter((e) => {
-      const meInSplits = e.splits.some((s) => s.userId === me._id);
-      const themInSplits = e.splits.some((s) => s.userId === userId);
-      const meInvolved = e.paidByUserId === me._id || meInSplits;
-      const themInvolved = e.paidByUserId === userId || themInSplits;
-      return meInvolved && themInvolved;
+    const filtered = expenses.filter((e) => {
+      const meIn = e.paidByUserId === me._id ||
+        e.splits.some(s => s.userId === me._id);
+      const themIn = e.paidByUserId === userId ||
+        e.splits.some(s => s.userId === userId);
+      return meIn && themIn;
     });
 
-    expenses.sort((a, b) => b.date - a.date);
+    filtered.sort((a, b) => b.date - a.date);
 
     const settlements = await ctx.db
       .query("settlements")
-      .filter((q) =>
+      .filter(q =>
         q.and(
-          q.eq(q.field("groupId"), undefined),
+          q.eq(q.field("groupId"), null),
           q.or(
             q.and(
               q.eq(q.field("paidByUserId"), me._id),
@@ -117,72 +130,76 @@ export const getExpensesBetweenUsers = query({
       )
       .collect();
 
-    settlements.sort((a, b) => b.date - a.date);
-
     let balance = 0;
-    for await (const e of expenses) {
+
+    for (const e of filtered) {
       if (e.paidByUserId === me._id) {
-        const split = e.splits.find((s) => s.userId === userId && !s.paid);
-        if (split) balance += split.amount;
+        const owed = e.splits.find(
+          s => s.userId === userId && !s.paid
+        );
+        if (owed) balance += owed.amount;
       } else {
-        const split = e.splits.find((s) => s.userId === me._id && !s.paid);
-        if (split) balance -= split.amount;
+        const iOwe = e.splits.find(
+          s => s.userId === me._id && !s.paid
+        );
+        if (iOwe) balance -= iOwe.amount;
       }
     }
 
     for (const s of settlements) {
-      if (s.paidByUserId === me._id) balance += s.amount;
-      else balance -= s.amount;
+      balance += s.paidByUserId === me._id ? s.amount : -s.amount;
     }
 
-    const other = await ctx.db.get(userId);
-    if (!other) throw new Error("User not found");
+    const otherUser = await ctx.db.get(userId);
+    if (!otherUser) throw new Error("User not found");
 
     return {
-      expenses,
+      expenses: filtered,
       settlements,
-      otherUser: {
-        id: other._id,
-        name: other.name,
-        email: other.email,
-        imageUrl: other.imageUrl,
-      },
       balance,
+      otherUser: {
+        id: otherUser._id,
+        name: otherUser.name,
+        email: otherUser.email,
+        imageUrl: otherUser.imageUrl,
+      },
     };
   },
 });
 
+/* ---------------- DELETE EXPENSE ---------------- */
+
 export const deleteExpense = mutation({
-  args: {
-    expenseId: v.id("expenses"),
-  },
-  handler: async (ctx, args) => {
+  args: { expenseId: v.id("expenses") },
+
+  handler: async (ctx, { expenseId }) => {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
-    const expense = await ctx.db.get(args.expenseId);
+    const expense = await ctx.db.get(expenseId);
+
     if (!expense) throw new Error("Expense not found");
 
     if (
       expense.createdBy !== user._id &&
       expense.paidByUserId !== user._id
     ) {
-      throw new Error("You don't have permission to delete this expense");
+      throw new Error("Unauthorized");
     }
 
-    await ctx.db.delete(args.expenseId);
+    await ctx.db.delete(expenseId);
     return { success: true };
   },
 });
+
+/* ---------------- MONTHLY SUMMARY QUERY ---------------- */
 
 export const getMonthlyExpenseSummaryQuery = query({
   args: {
     month: v.number(),
     year: v.number(),
   },
+
   handler: async (ctx, { month, year }) => {
     const user = await ctx.runQuery(internal.users.getCurrentUser);
-    if (!user) {
-      throw new Error("Not authenticated");
-    }
 
     const start = new Date(year, month - 1, 1).getTime();
     const end = new Date(year, month, 1).getTime();
@@ -195,37 +212,19 @@ export const getMonthlyExpenseSummaryQuery = query({
       .filter(q => q.eq(q.field("createdBy"), user._id))
       .collect();
 
-    const totalSpent = expenses.reduce(
-      (sum, e) => sum + (e.amount || 0),
-      0
-    );
+    const categoryTotals = {};
+    let totalSpent = 0;
 
-    const expenseCount = expenses.length;
-
-    const categoryMap = {};
     for (const e of expenses) {
-      const category = e.category || "Other";
-      categoryMap[category] =
-        (categoryMap[category] || 0) + (e.amount || 0);
+      totalSpent += e.amount;
+      const cat = e.category ?? "Other";
+      categoryTotals[cat] = (categoryTotals[cat] ?? 0) + e.amount;
     }
 
-    const topCategories = Object.entries(categoryMap)
+    const topCategories = Object.entries(categoryTotals)
       .map(([name, amount]) => ({ name, amount }))
       .sort((a, b) => b.amount - a.amount)
       .slice(0, 2);
-
-    let userPaid = 0;
-    let othersPaid = 0;
-
-    for (const e of expenses) {
-      if (String(e.paidByUserId) === String(user._id)) {
-        userPaid += e.amount || 0;
-      } else {
-        othersPaid += e.amount || 0;
-      }
-    }
-
-    const paidMoreThanOthers = userPaid > othersPaid;
 
     return {
       period: `${new Date(year, month - 1).toLocaleString("en-US", {
@@ -233,34 +232,33 @@ export const getMonthlyExpenseSummaryQuery = query({
       })} ${year}`,
       currency: "INR",
       totalSpent,
-      expenseCount,
+      expenseCount: expenses.length,
       topCategories,
-      paidMoreThanOthers,
     };
   },
 });
 
+/* ---------------- AI SUMMARY ACTION ---------------- */
 
 export const getMonthlyExpenseSummaryAction = action({
   args: {
     month: v.number(),
     year: v.number(),
   },
-  handler: async (ctx, { month, year }) => {
-    // 1️⃣ Call QUERY (DB work)
-    const summaryData = await ctx.runQuery(
+
+  handler: async (ctx, args) => {
+    const data = await ctx.runQuery(
       "expenses:getMonthlyExpenseSummaryQuery",
-      { month, year }
+      args
     );
-    // 2️⃣ Gemini AI
-    let aiSummary = "AI insights are temporarily unavailable. Showing data summary instead.";
 
-    const apiKey = process.env.GEMINI_API_KEY;
+    let aiSummary =
+      "AI insights are temporarily unavailable.";
 
-    if (apiKey) {
+    if (process.env.GEMINI_API_KEY) {
       try {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        const res = await fetch(
+          `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -268,36 +266,26 @@ export const getMonthlyExpenseSummaryAction = action({
               contents: [
                 {
                   role: "user",
-                  parts: [
-                    {
-                      text: `You are a financial insights assistant.
-Use only the data below.
-Max 5 sentences.
-
-${JSON.stringify(summaryData, null, 2)}`,
-                    },
-                  ],
-                },
-              ],
+                  parts: [{
+                    text: `Give max 5 factual financial insights using only this data:\n${JSON.stringify(data)}`
+                  }]
+                }
+              ]
             }),
           }
         );
 
-        if (response.ok) {
-          const json = await response.json();
+        if (res.ok) {
+          const json = await res.json();
           aiSummary =
-            json?.candidates?.[0]?.content?.parts?.[0]?.text ||
+            json?.candidates?.[0]?.content?.parts?.[0]?.text ??
             aiSummary;
         }
-        
-      } catch (err) {
-        console.error("Gemini error:", err);
+      } catch {
+        // fallback already handled
       }
     }
 
-    return {
-      data: summaryData,
-      aiSummary,
-    };
+    return { data, aiSummary };
   },
 });

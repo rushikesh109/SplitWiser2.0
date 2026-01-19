@@ -22,7 +22,7 @@ export function GroupList({ groups }) {
 
         return (
           <Link
-            href={`/groups/₹{group.id}`}
+            href={`/groups/${group.id}`}
             key={group.id}
             className="flex items-center justify-between hover:bg-muted p-2 rounded-md transition-colors"
           >
