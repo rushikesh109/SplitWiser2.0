@@ -53,18 +53,27 @@ const Header = () => {
         <div className="flex items-center gap-2">
         
         <Button
+  aria-label="View SplitWiser project on GitHub"
   className="
-    bg-green-600 hover:bg-green-700 border-none text-white cursor-pointer
-    h-8 px-3 text-sm
-    sm:h-10 sm:px-4 sm:text-base
+    flex items-center gap-2
+    bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800
+    text-black dark:text-white
+    border-none cursor-pointer
+    h-8 px-2
+    sm:h-10 sm:px-4 sm:bg-green-600 sm:hover:bg-green-700 sm:text-white
   "
   onClick={() =>
-    window.open("https://github.com/rushikesh109/SplitWiser", "_blank")
+    window.open(
+      "https://github.com/rushikesh109/SplitWiser",
+      "_blank",
+      "noopener,noreferrer"
+    )
   }
 >
-  <Github size={18} strokeWidth={2.25} />
-  GitHub
+  <Github size={20} strokeWidth={2.25} />
+  <span className="hidden sm:inline">GitHub</span>
 </Button>
+
 
         </div>
           <Authenticated>
